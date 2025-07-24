@@ -1,0 +1,6 @@
+name = "my-pwa-app"
+main = "src/pages/index.astro"
+compatibility_date = "2024-07-24"
+
+[site]
+bucket = "./public"
