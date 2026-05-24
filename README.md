@@ -8,7 +8,7 @@
 
 Create a blog with Astro and deploy it on Cloudflare Workers as a [static website](https://developers.cloudflare.com/workers/static-assets/).
 
-Features:
+Features:あ
 
 - ✅ Minimal styling (make it your own!)
 - ✅ 100/100 Lighthouse performance
