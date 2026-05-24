@@ -1,0 +1,25 @@
+name: PR Checklist Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  checklist:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: チェックリスト確認
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || "";
+
+            // 未チェック項目を探す
+            const unchecked = body.match(/- \[ \]/g);
+
+            if (unchecked) {
+              core.setFailed(`未チェック項目が ${unchecked.length} 件あります`);
+            } else {
+              console.log("すべてチェック済み ✅");
+            }
