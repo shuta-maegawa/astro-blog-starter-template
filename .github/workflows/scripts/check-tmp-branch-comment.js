@@ -6,7 +6,7 @@
  * @param {object} github - GitHub API client (Octokit)
  * @param {object} context - GitHub Actions context
  */
-module.exports = async ({ github, context }) => {
+export default async ({ github, context }) => {
   const pullRequest = context.payload.pull_request;
 
   if (!pullRequest) {
