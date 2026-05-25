@@ -34,21 +34,15 @@ export default async ({ github, context }) => {
 このマージには特別な注意が必要です：
 
 ### マージ前の確認事項
-- [ ] 決済関連のE2Eテストを実行し、すべて成功することを確認
-- [ ] Stripe APIの仕様変更（Breaking Changes）をリリースノートで確認
-- [ ] Webhook処理への影響を確認
-- [ ] サブスクリプション管理機能の動作確認
-- [ ] エラーハンドリングの変更がないか確認
+- [ ] Stripe APIの仕様変更（Breaking Changes）をリリースノートで確認したか
+- [ ] 依存関係更新後のJDKのバージョンとWebhookのAPIのバージョンが対応しているか確認したか
+- [ ] 開発環境でWebhookイベントの受信と処理が正常に行われるかテストしたか
 
 ### 参考ドキュメント
 - [Stripe Java SDK Changelog](https://github.com/stripe/stripe-java/blob/master/CHANGELOG.md)
+- [Stripe API Reference](https://stripe.com/docs/api)
+- [Stripe Release Notes](https://docs.stripe.com/changelog)
 - プロジェクト内: \`docs/subscription/\` 配下の決済関連ドキュメント
-
-### テスト環境での確認推奨
-本番環境へのデプロイ前に、ステージング環境で以下を確認してください：
-- テスト用カード番号での決済フロー
-- Webhookイベントの受信と処理
-- 既存サブスクリプションへの影響
 
 ---
 _このコメントは自動生成されました（GitHub Actions）_
@@ -104,6 +98,22 @@ ${marker}`;
       subject_type: "file",
       body: message,
     });
+
+    // ラベルを追加（オプション: 要注意PRであることを視覚的に表現）
+    try {
+      await github.rest.issues.addLabels({
+        owner,
+        repo,
+        issue_number: prNumber,
+        labels: ["⚠️ critical-dependency", "renovate"],
+      });
+      console.log("✓ Labels added successfully");
+    } catch (error) {
+      console.log(
+        `⚠ Failed to add labels (labels may not exist): ${error.message}`,
+      );
+      // ラベル追加失敗は無視（ラベルが存在しない場合があるため）
+    }
 
     console.log(`Review comment posted successfully to PR #${prNumber}`);
   } catch (error) {
