@@ -1,7 +1,7 @@
 /**
  * PR Branch Alert Script (tmp/*)
  *
- * Posts a Stripe caution comment when a pull request branch starts with "tmp/".
+ * Posts a resolvable PR review comment when a pull request branch starts with "tmp/".
  *
  * @param {object} github - GitHub API client (Octokit)
  * @param {object} context - GitHub Actions context
@@ -27,6 +27,8 @@ export default async ({ github, context }) => {
     return;
   }
 
+  const marker = "<!-- tmp-branch-stripe-review-comment -->";
+
   const message = `**Stripe SDK のアップデートが検出されました**
 
 このマージには特別な注意が必要です：
@@ -49,18 +51,63 @@ export default async ({ github, context }) => {
 - 既存サブスクリプションへの影響
 
 ---
-_このコメントは自動生成されました（GitHub Actions）_`;
+_このコメントは自動生成されました（GitHub Actions）_
+
+${marker}`;
 
   try {
-    await github.rest.issues.createComment({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      issue_number: prNumber,
+    const owner = context.repo.owner;
+    const repo = context.repo.repo;
+
+    const { data: existingReviewComments } =
+      await github.rest.pulls.listReviewComments({
+        owner,
+        repo,
+        pull_number: prNumber,
+        per_page: 100,
+      });
+
+    const alreadyPosted = existingReviewComments.some((comment) => {
+      const body = comment.body || "";
+      const login = comment.user?.login || "";
+      return login === "github-actions[bot]" && body.includes(marker);
+    });
+
+    if (alreadyPosted) {
+      console.log("Review comment already exists. Skipping duplicate post.");
+      return;
+    }
+
+    const { data: files } = await github.rest.pulls.listFiles({
+      owner,
+      repo,
+      pull_number: prNumber,
+      per_page: 100,
+    });
+
+    const targetFile = files.find(
+      (file) => (file.status === "modified" || file.status === "added") && file.patch,
+    );
+
+    if (!targetFile) {
+      throw new Error(
+        "Could not find a suitable changed file to attach a resolvable review comment.",
+      );
+    }
+
+    await github.rest.pulls.createReviewComment({
+      owner,
+      repo,
+      pull_number: prNumber,
+      commit_id: pullRequest.head.sha,
+      path: targetFile.filename,
+      subject_type: "file",
       body: message,
     });
-    console.log(`Comment posted successfully to PR #${prNumber}`);
+
+    console.log(`Review comment posted successfully to PR #${prNumber}`);
   } catch (error) {
-    console.error(`Failed to post comment: ${error.message}`);
+    console.error(`Failed to post review comment: ${error.message}`);
     throw error;
   }
 

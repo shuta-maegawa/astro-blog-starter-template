@@ -2,7 +2,7 @@ name: Tmp Branch Auto Comment
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, reopened, synchronize]
 
 jobs:
   check-and-comment:
@@ -11,6 +11,7 @@ jobs:
 
     permissions:
       pull-requests: write
+      contents: read
 
     steps:
       - name: Checkout repository
