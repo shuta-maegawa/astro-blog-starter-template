@@ -1,0 +1,24 @@
+name: Tmp Branch Auto Comment
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  check-and-comment:
+    runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'tmp/')
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Add comment for tmp branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const script = require('./.github/workflows/scripts/check-tmp-branch-comment.js');
+            await script({ github, context });
