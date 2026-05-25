@@ -20,5 +20,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { default: script } = await import('./.github/workflows/scripts/check-tmp-branch-comment.js');
+            const { pathToFileURL } = require('url');
+            const scriptFile = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/check-tmp-branch-comment.js`;
+            const { default: script } = await import(pathToFileURL(scriptFile).href);
             await script({ github, context });
